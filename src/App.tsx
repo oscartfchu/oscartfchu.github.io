@@ -3,7 +3,11 @@ import ChessRPG from "./components/ChessRpg";
 import  Header from "./components/Header";
 import moon from "./assets/moon.png";
 
-const GamePopup = ({ setIsGameOpen }) => {
+interface GamePopupProps {
+  setIsGameOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const GamePopup = ({ setIsGameOpen}: GamePopupProps) => {
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
       <div
