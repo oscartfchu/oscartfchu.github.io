@@ -99,8 +99,6 @@ const ChessRPG = () => {
 
   const [isGameOver, setGameOver] = useState(false);
 
-  const [stamp, setStamp] = useState(0);
-
   const [attackRange, setAttackRange] = useState<BoardGrid[]>([]);
 
   const isBossTile = (x: number, y: number) => {
@@ -133,8 +131,6 @@ const ChessRPG = () => {
 
   const handlePlayerMove = (targetX: number, targetY: number) => {
     if (isGameOver) return;
-
-    setStamp(stamp + 1);
 
     const colDiff = Math.abs(targetX - player.posX);
     const rowDiff = Math.abs(targetY - player.posY);
@@ -336,11 +332,7 @@ const ChessRPG = () => {
                       {/* Knight GIF (with cache-busting key) */}
                       {hasPlayer && (
                         <div className="absolute inset-0 flex items-center justify-center z-20">
-                          <img
-                            key={stamp}
-                            src={`${knight}?v=${stamp}`}
-                            alt="Knight"
-                          />
+                          <img src={knight} alt="Knight" />
                         </div>
                       )}
 
