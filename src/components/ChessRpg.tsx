@@ -301,7 +301,7 @@ const ChessRPG = () => {
                   const hasPlayer = player.posX === r && player.posY === c;
                   // Move distance logic for 4-direction movement
                   const isMovable =
-                    Math.abs(r - player.posX) + Math.abs(c - player.posY) === 1;
+                    Math.abs(r - player.posX) + Math.abs(c - player.posY) <= 1;
                   const isAttack = attackRange.some(
                     (a) => a.row === r && a.col === c,
                   );
