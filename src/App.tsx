@@ -97,8 +97,27 @@ const App = () => {
               The Editorial
             </h3>
             <p className="text-sm leading-relaxed mb-4">
-              You may reach out to me at
+              You may reach out to me at the following destinations:
             </p>
+
+            <div className="flex flex-col gap-2">
+              <a
+                href="https://github.com/oscartfchu"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-bold hover:text-blue-500 transition-colors flex items-center gap-2"
+              >
+                <span className="italic underline">GitHub:</span>
+                <span className="font-mono text-xs">/oscartfchu</span>
+              </a>
+
+              <a
+                className="text-sm font-bold transition-colors flex items-center gap-2"
+              >
+                <span className="italic underline">Email:</span>
+                <span className="font-mono text-xs">oscartfchu@gmail.com</span>
+              </a>
+            </div>
           </article>
         </div>
       </main>
