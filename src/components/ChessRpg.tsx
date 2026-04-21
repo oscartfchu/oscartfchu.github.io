@@ -42,16 +42,15 @@ const rangedBossAttack = (x: number, y: number) => {
     6: [0, 1, 2, 3, 4].flatMap((r) =>
       [0, 1, 2, 3, 4]
         .filter((c) => (r + c) % 2 === 0)
-        .map((c) => ({ row: r, col: c }))
+        .map((c) => ({ row: r, col: c })),
     ),
 
     // Mode 7: All Black Grids ((r + c) is odd)
     7: [0, 1, 2, 3, 4].flatMap((r) =>
       [0, 1, 2, 3, 4]
         .filter((c) => (r + c) % 2 !== 0)
-        .map((c) => ({ row: r, col: c }))
+        .map((c) => ({ row: r, col: c })),
     ),
-    
   };
 
   // Update random to include up to 5
@@ -170,11 +169,13 @@ const ChessRPG = () => {
           ...prev,
           health: prev.health - 1,
         }));
+        if (boss.health == 1) {
+          setGameOver(true);
+          return;
+        }
       }
 
-      if (boss.health >= 1) {
-        processBossTurn({ posX: targetX, posY: targetY });
-      }
+      processBossTurn({ posX: targetX, posY: targetY });
     }
   };
 
@@ -241,118 +242,158 @@ const ChessRPG = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-900 text-white p-4 select-none touch-none">
-      
-      <div className="w-full max-w-[80vw] mb-4">
-        <div className="w-full md:w-48 p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg text-sm text-zinc-300">
-        <h3 className="font-bold text-red-500 uppercase mb-3 tracking-widest border-b border-zinc-700 pb-1">Manual</h3>
-        <ul className="space-y-4">
-          <li className="flex gap-2">
-            <div className="w-4 h-4 bg-green-500/20 border border-green-500/50 rounded-sm shrink-0" />
-            <p><span className="text-green-400 font-bold">Green</span> tiles are movable.</p>
-          </li>
-          <li className="flex gap-2">
-            <div className="w-4 h-4 flex items-center justify-center font-bold text-red-500 border border-red-500 rounded-sm shrink-0 leading-none">!</div>
-            <p>Boss attacks <span className="text-red-500 font-bold">!</span> next turn.</p>
-          </li>
-        </ul>
-      </div>
+      <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-red-500 uppercase mb-8 drop-shadow-lg">
+        CHESS RPG
+      </h1>
 
-        {/* Health Bar Container */}
-        <div className="flex justify-between items-end w-full px-1">
-          {/* Boss Health - Aligned Left */}
-          <div className="flex flex-col items-start">
-            <span className="text-[10px] uppercase text-zinc-500 font-bold">
-              Boss
-            </span>
-            <span className="text-xl font-mono text-red-400">
-              HP: {boss.health}/10
-            </span>
+      <div className="flex flex-col md:flex-row items-start gap-8 max-w-6xl">
+        <div className="w-full md:w-48 p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg text-sm text-zinc-300">
+          <h3 className="font-bold text-red-500 uppercase mb-3 tracking-widest border-b border-zinc-700 pb-1">
+            Manual
+          </h3>
+          <ul className="space-y-4">
+            <li className="flex gap-2">
+              <div className="w-4 h-4 bg-green-500/20 border border-green-500/50 rounded-sm shrink-0" />
+              <p>
+                <span className="text-green-400 font-bold">Green</span> tiles
+                show where you can move.
+              </p>
+            </li>
+            <li className="flex gap-2 text-zinc-400">
+              <p>
+                Watch for the{" "}
+                <span className="text-red-400 font-bold italic">Eye Piles</span>
+                —they show the boss's next attack.
+              </p>
+            </li>
+          </ul>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full py-3 px-4 bg-zinc-800 border border-zinc-600 text-zinc-400 font-bold uppercase text-xs tracking-widest hover:bg-red-900/20 hover:text-red-500 hover:border-red-900/50 transition-all active:scale-95 flex items-center justify-center gap-2 group"
+          >
+            Exit Game
+          </button>
+        </div>
+
+        <div className="flex flex-col items-center">
+          {/* Health Bars */}
+          <div className="flex justify-between items-end w-full px-1 mb-4">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-zinc-500 font-bold uppercase">
+                Boss
+              </span>
+              <span className="text-xl font-mono text-red-400">
+                HP: {boss.health}/10
+              </span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] text-zinc-500 font-bold uppercase">
+                Player
+              </span>
+              <span className="text-xl font-mono text-blue-400">
+                HP: {player.health}/3
+              </span>
+            </div>
           </div>
 
-          {/* Player Health - Aligned Right */}
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] uppercase text-zinc-500 font-bold">
-              Player
-            </span>
-            <span className="text-xl font-mono text-blue-400">
-              HP: {player.health}/3
-            </span>
+          {/* The Grid */}
+          <div className="relative border-4 border-zinc-700 leading-0">
+            {[...Array(GRID_SIZE)].map((_, r) => (
+              <div key={r} className="flex">
+                {[...Array(GRID_SIZE)].map((_, c) => {
+                  const isGrey = (r + c) % 2 === 0;
+                  const hasPlayer = player.posX === r && player.posY === c;
+                  // Move distance logic for 4-direction movement
+                  const isMovable =
+                    Math.abs(r - player.posX) + Math.abs(c - player.posY) === 1;
+                  const isAttack = attackRange.some(
+                    (a) => a.row === r && a.col === c,
+                  );
+                  const isBoss =
+                    r >= boss.posX &&
+                    r < boss.posX + boss.size &&
+                    c >= boss.posY &&
+                    c < boss.posY + boss.size;
+
+                  return (
+                    <div
+                      key={`${r}-${c}`}
+                      onClick={() => handlePlayerMove(r, c)}
+                      className={`w-[16vw] h-[16vw] max-w-17.5 max-h-17.5 flex items-center justify-center relative border border-zinc-800 ${isGrey ? "bg-zinc-600" : "bg-zinc-400"}`}
+                    >
+                      {/* Movable Highlight (Subtle Overlay) */}
+                      {isMovable && (
+                        <div className="absolute inset-0 bg-green-400/20 z-0 pointer-events-none" />
+                      )}
+
+                      {/* Attack indicator (eyePile.gif handles the visual warning) */}
+                      {isAttack && !isBoss && (
+                        <div className="absolute inset-0 flex items-center justify-center z-10">
+                          <img src={eyePile} alt="Attack Warning" />
+                        </div>
+                      )}
+
+                      {/* Knight GIF (with cache-busting key) */}
+                      {hasPlayer && (
+                        <div className="absolute inset-0 flex items-center justify-center z-20">
+                          <img
+                            key={stamp}
+                            src={`${knight}?v=${stamp}`}
+                            alt="Knight"
+                          />
+                        </div>
+                      )}
+
+                      {/* Boss Rendering */}
+                      {boss.posX === r && boss.posY === c && (
+                        <div className="absolute top-0 left-0 w-[200%] h-[200%] z-30 pointer-events-none p-1">
+                          <img
+                            src={bigEye}
+                            className="w-full h-full object-contain"
+                            alt="Boss"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="relative border-4 border-zinc-700 leading-0">
-        {[...Array(GRID_SIZE)].map((_, r) => (
-          <div key={r} className="flex">
-            {[...Array(GRID_SIZE)].map((_, c) => {
-              const isGrey = (r + c) % 2 === 0;
-              const hasPlayer = player.posX === r && player.posY === c;
-              const isAttack = attackRange.some(
-                (a) => a.row === r && a.col === c,
-              );
-              const isBoss =
-                boss.posX <= r &&
-                r < boss.posX + boss.size &&
-                boss.posY <= c &&
-                c < boss.posY + boss.size;
-
-              const rowDiff = Math.abs(r - player.posX);
-              const colDiff = Math.abs(c - player.posY);
-              const isMovable =
-                (rowDiff === 1 && colDiff === 0) ||
-                (rowDiff === 0 && colDiff === 1) ||
-                (rowDiff === 0 && colDiff === 0);
-
-              return (
-                <div
-                  key={`${r}-${c}`}
-                  onClick={() => handlePlayerMove(r, c)}
-                  className={`
-                    w-[16vw] h-[16vw] max-w-17.5 max-h-17.5
-                    flex items-center justify-center text-3xl
-                    border border-zinc-800 transition-colors relative
-                    ${isGrey ? "bg-zinc-600" : "bg-zinc-400"}
-                    ${isMovable && !isBoss ? "bg-green-500/[.35]!" : ""}
-                  `}
-                >
-                  {isAttack && !isBoss && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img src={eyePile} />
-                    </div>
-                  )}
-
-                  {hasPlayer && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img key={stamp} src={knight}/>
-                    </div>
-                  )}
-
-                  {boss.posX === r && boss.posY === c && (
-                    <div className="absolute top-0 left-0 w-[200%] h-[200%] z-20 pointer-events-none p-1">
-                      <img
-                        src={bigEye}
-                        alt="Boss"
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-
-      {boss.health <= 0 && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-500">
-          <div className="text-center p-8 border-4 border-yellow-500 bg-zinc-900 rounded-lg shadow-[0_0_50px_rgba(234,179,8,0.3)]">
-            <h2 className="text-5xl font-black text-yellow-500 mb-4 tracking-tighter italic">
+      {/* Victory Popup */}
+      {isGameOver && boss.health <= 0 && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="text-center p-8 border-4 border-yellow-500 bg-zinc-900 rounded-lg shadow-2xl">
+            <h2 className="text-6xl font-black text-yellow-500 mb-4 italic tracking-tighter">
               VICTORY
             </h2>
-            <p className="text-zinc-400 mb-6">The dungeon is cleared.</p>
+            <p className="text-zinc-400 mb-8 uppercase tracking-widest font-bold">
+              The Dungeon is Cleared
+            </p>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-yellow-500 text-black font-bold uppercase hover:bg-yellow-400 transition-colors"
+              className="px-8 py-3 bg-yellow-500 text-black font-black uppercase hover:bg-yellow-400 transition-transform active:scale-95"
+            >
+              Play Again
+            </button>
+          </div>
+        </div>
+      )}
+      {isGameOver && player.health <= 0 && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="text-center p-8 border-4 border-yellow-500 bg-zinc-900 rounded-lg shadow-2xl">
+            <h2 className="text-6xl font-black text-yellow-500 mb-4 italic tracking-tighter">
+              LOSS
+            </h2>
+            <p className="text-zinc-400 mb-8 uppercase tracking-widest font-bold">
+              The boss is too strong...
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-8 py-3 bg-yellow-500 text-black font-black uppercase hover:bg-yellow-400 transition-transform active:scale-95"
             >
               Play Again
             </button>
