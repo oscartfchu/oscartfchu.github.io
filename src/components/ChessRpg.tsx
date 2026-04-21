@@ -318,7 +318,7 @@ const ChessRPG = () => {
                       className={`w-[16vw] h-[16vw] max-w-17.5 max-h-17.5 flex items-center justify-center relative border border-zinc-800 ${isGrey ? "bg-zinc-600" : "bg-zinc-400"}`}
                     >
                       {/* Movable Highlight (Subtle Overlay) */}
-                      {isMovable && (
+                      {isMovable && !isBoss && (
                         <div className="absolute inset-0 bg-green-400/20 z-0 pointer-events-none" />
                       )}
 
