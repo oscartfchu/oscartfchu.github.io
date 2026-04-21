@@ -1,13 +1,13 @@
 import { useState } from "react";
 import ChessRPG from "./components/ChessRpg";
-import  Header from "./components/Header";
+import Header from "./components/Header";
 import moon from "./assets/moon.png";
 
 interface GamePopupProps {
   setIsGameOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const GamePopup = ({ setIsGameOpen}: GamePopupProps) => {
+const GamePopup = ({ setIsGameOpen }: GamePopupProps) => {
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
       <div
@@ -31,7 +31,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-[url('./assets/background.png')] text-gray-900 p-4 md:p-8 font-serif">
-      <Header/>
+      <Header />
 
       <main className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Left Column: Secondary News */}
@@ -41,7 +41,8 @@ const App = () => {
               Side Project#01
             </h3>
             <p className="text-sm leading-relaxed">
-              A load-balancer implemented in Go. Part of my learning journey in Go.
+              A load-balancer implemented in Go. Part of my learning journey in
+              Go.
             </p>
           </article>
           <hr className="border-gray-400 mb-4" />
@@ -82,12 +83,12 @@ const App = () => {
             </span>
             <h4
               onClick={() => setIsGameOpen(true)}
-              className="text-2xl font-black text-center border-2 border-black py-2 mb-2"
+              className="text-lg sm:text-xl font-black text-center border-2 border-black py-2 mb-2 tracking-tighter wrap-break-word"
             >
               GAME PROTOTYPE
             </h4>
             <p className="text-xs text-center">
-              Click the square above to start the game.
+              Click the square above to start the game I made.
             </p>
           </div>
           {isGameOpen && <GamePopup setIsGameOpen={setIsGameOpen} />}
@@ -96,7 +97,7 @@ const App = () => {
               The Editorial
             </h3>
             <p className="text-sm leading-relaxed mb-4">
-              You may reach out to me at 
+              You may reach out to me at
             </p>
           </article>
         </div>

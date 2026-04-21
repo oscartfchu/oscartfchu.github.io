@@ -1,6 +1,7 @@
 import { useState } from "react";
-import bigEye from "../assets/bigEye.gif"
-import hole from "../assets/hole.gif"
+import bigEye from "../assets/bigEye.gif";
+import eyePile from "../assets/eyes_pile.gif";
+import knight from "../assets/knight.gif";
 
 const GRID_SIZE: number = 5;
 
@@ -21,10 +22,40 @@ const rangedBossAttack = (x: number, y: number) => {
       })),
     ),
     3: [],
+    // Mode 4: Inner 9 Grids (Center 3x3)
+    4: [1, 2, 3].flatMap((r) =>
+      [1, 2, 3].map((c) => ({
+        row: r,
+        col: c,
+      })),
+    ),
+
+    // Mode 5: Outer Perimeter (The Ring)
+    5: [0, 1, 2, 3, 4].flatMap((r) =>
+      [0, 1, 2, 3, 4]
+        .filter((c) => r === 0 || r === 4 || c === 0 || c === 4)
+        .map((c) => ({
+          row: r,
+          col: c,
+        })),
+    ),
+    6: [0, 1, 2, 3, 4].flatMap((r) =>
+      [0, 1, 2, 3, 4]
+        .filter((c) => (r + c) % 2 === 0)
+        .map((c) => ({ row: r, col: c }))
+    ),
+
+    // Mode 7: All Black Grids ((r + c) is odd)
+    7: [0, 1, 2, 3, 4].flatMap((r) =>
+      [0, 1, 2, 3, 4]
+        .filter((c) => (r + c) % 2 !== 0)
+        .map((c) => ({ row: r, col: c }))
+    ),
+    
   };
 
-  const nextAttackID = Math.floor(Math.random() * 3) + 1;
-
+  // Update random to include up to 5
+  const nextAttackID = Math.floor(Math.random() * 7) + 1;
   return attackMode[nextAttackID];
 };
 
@@ -52,10 +83,10 @@ interface BoardGrid {
 
 const ChessRPG = () => {
   const [player, setPlayer] = useState<Player>({
-    health: 5,
+    health: 3,
     class: "knight",
     posX: 4,
-    posY: 2,
+    posY: 4,
   });
 
   const [boss, setBoss] = useState<Boss>({
@@ -68,6 +99,8 @@ const ChessRPG = () => {
   });
 
   const [isGameOver, setGameOver] = useState(false);
+
+  const [stamp, setStamp] = useState(0);
 
   const [attackRange, setAttackRange] = useState<BoardGrid[]>([]);
 
@@ -101,6 +134,8 @@ const ChessRPG = () => {
 
   const handlePlayerMove = (targetX: number, targetY: number) => {
     if (isGameOver) return;
+
+    setStamp(stamp + 1);
 
     const colDiff = Math.abs(targetX - player.posX);
     const rowDiff = Math.abs(targetY - player.posY);
@@ -137,7 +172,9 @@ const ChessRPG = () => {
         }));
       }
 
-      processBossTurn({ posX: targetX, posY: targetY });
+      if (boss.health >= 1) {
+        processBossTurn({ posX: targetX, posY: targetY });
+      }
     }
   };
 
@@ -187,7 +224,7 @@ const ChessRPG = () => {
           health: prev.health - 1,
         }));
         console.log("Player hit by fire at:", tile.row, tile.col);
-        setGameOver(true);
+        if (player.health - 1 <= 0) setGameOver(true);
       }
     });
 
@@ -204,13 +241,44 @@ const ChessRPG = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-900 text-white p-4 select-none touch-none">
-      <div className="text-center mb-4 ">
-        <h1 className="text-2xl font-black tracking-tighter text-red-500 uppercase">
-          Boss Encounter
-        </h1>
-        <p className="text-zinc-400 text-sm">
-          Boss health {boss.health} === Player Health {player.health}
-        </p>
+      
+      <div className="w-full max-w-[80vw] mb-4">
+        <div className="w-full md:w-48 p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg text-sm text-zinc-300">
+        <h3 className="font-bold text-red-500 uppercase mb-3 tracking-widest border-b border-zinc-700 pb-1">Manual</h3>
+        <ul className="space-y-4">
+          <li className="flex gap-2">
+            <div className="w-4 h-4 bg-green-500/20 border border-green-500/50 rounded-sm shrink-0" />
+            <p><span className="text-green-400 font-bold">Green</span> tiles are movable.</p>
+          </li>
+          <li className="flex gap-2">
+            <div className="w-4 h-4 flex items-center justify-center font-bold text-red-500 border border-red-500 rounded-sm shrink-0 leading-none">!</div>
+            <p>Boss attacks <span className="text-red-500 font-bold">!</span> next turn.</p>
+          </li>
+        </ul>
+      </div>
+
+        {/* Health Bar Container */}
+        <div className="flex justify-between items-end w-full px-1">
+          {/* Boss Health - Aligned Left */}
+          <div className="flex flex-col items-start">
+            <span className="text-[10px] uppercase text-zinc-500 font-bold">
+              Boss
+            </span>
+            <span className="text-xl font-mono text-red-400">
+              HP: {boss.health}/10
+            </span>
+          </div>
+
+          {/* Player Health - Aligned Right */}
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] uppercase text-zinc-500 font-bold">
+              Player
+            </span>
+            <span className="text-xl font-mono text-blue-400">
+              HP: {player.health}/3
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="relative border-4 border-zinc-700 leading-0">
@@ -220,8 +288,20 @@ const ChessRPG = () => {
               const isGrey = (r + c) % 2 === 0;
               const hasPlayer = player.posX === r && player.posY === c;
               const isAttack = attackRange.some(
-                (a) => a.row === r && a.col == c,
+                (a) => a.row === r && a.col === c,
               );
+              const isBoss =
+                boss.posX <= r &&
+                r < boss.posX + boss.size &&
+                boss.posY <= c &&
+                c < boss.posY + boss.size;
+
+              const rowDiff = Math.abs(r - player.posX);
+              const colDiff = Math.abs(c - player.posY);
+              const isMovable =
+                (rowDiff === 1 && colDiff === 0) ||
+                (rowDiff === 0 && colDiff === 1) ||
+                (rowDiff === 0 && colDiff === 0);
 
               return (
                 <div
@@ -232,19 +312,21 @@ const ChessRPG = () => {
                     flex items-center justify-center text-3xl
                     border border-zinc-800 transition-colors relative
                     ${isGrey ? "bg-zinc-600" : "bg-zinc-400"}
+                    ${isMovable && !isBoss ? "bg-green-500/[.35]!" : ""}
                   `}
                 >
-                  {/* Fire Attack Visual */}
-                  {isAttack && (
+                  {isAttack && !isBoss && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <img src = {hole} />
+                      <img src={eyePile} />
                     </div>
                   )}
 
-                  {/* Player King */}
-                  {hasPlayer && <span className="z-10 drop-shadow-lg">♔</span>}
+                  {hasPlayer && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <img key={stamp} src={knight}/>
+                    </div>
+                  )}
 
-                  {/* Boss Representation (Top-left anchor renders the image) */}
                   {boss.posX === r && boss.posY === c && (
                     <div className="absolute top-0 left-0 w-[200%] h-[200%] z-20 pointer-events-none p-1">
                       <img
@@ -260,6 +342,23 @@ const ChessRPG = () => {
           </div>
         ))}
       </div>
+
+      {boss.health <= 0 && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-500">
+          <div className="text-center p-8 border-4 border-yellow-500 bg-zinc-900 rounded-lg shadow-[0_0_50px_rgba(234,179,8,0.3)]">
+            <h2 className="text-5xl font-black text-yellow-500 mb-4 tracking-tighter italic">
+              VICTORY
+            </h2>
+            <p className="text-zinc-400 mb-6">The dungeon is cleared.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-yellow-500 text-black font-bold uppercase hover:bg-yellow-400 transition-colors"
+            >
+              Play Again
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
