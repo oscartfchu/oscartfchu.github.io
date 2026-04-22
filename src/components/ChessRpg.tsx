@@ -82,7 +82,7 @@ interface BoardGrid {
 
 const ChessRPG = () => {
   const [player, setPlayer] = useState<Player>({
-    health: 3,
+    health: 2,
     class: "knight",
     posX: 4,
     posY: 4,
